@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Sidebar, type Tab } from './features/shell/Sidebar'
 import { DecksView } from './features/decks/DecksView'
 import { ReviewSession } from './features/review/ReviewSession'
-import { GenerateView } from './features/generate/GenerateView'
+import { ImportView } from './features/import/ImportView'
 import { StatsView } from './features/stats/StatsView'
 import { SettingsView } from './features/settings/SettingsView'
 import { syncNow } from './sync/sync'
@@ -67,7 +67,7 @@ export default function App() {
           {tab === 'decks' && (
             <DecksView onOpenDeck={(deckId, newCardsPerDay) => setReviewing({ deckId, newCardsPerDay })} />
           )}
-          {tab === 'generate' && <GenerateView />}
+          {tab === 'import' && <ImportView onImported={refreshSummary} />}
           {tab === 'stats' && <StatsView />}
           {tab === 'settings' && <SettingsView />}
         </main>

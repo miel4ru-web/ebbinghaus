@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { clearAnthropicKey, clearGithubToken, loadSettings, saveSettings, type Settings } from '../../lib/storage'
+import { clearGithubToken, loadSettings, saveSettings, type Settings } from '../../lib/storage'
 import { loadTheme, saveTheme, type Theme } from '../../lib/theme'
 import { checkAccess } from '../../sync/github'
-import { PageHeader, Callout, btnAccent } from '../../components/ui'
+import { PageHeader, btnAccent } from '../../components/ui'
 import { CheckIcon } from '../../components/icons'
 
 const inputCls = 'w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text'
@@ -41,7 +41,7 @@ export function SettingsView() {
 
   return (
     <>
-      <PageHeader title="설정" subtitle="데이터 동기화 · 카드 생성 키 · 화면" />
+      <PageHeader title="설정" subtitle="데이터 동기화 · 화면" />
 
       <div className="max-w-2xl px-5 py-6 md:px-8 md:py-8">
         <div className="flex flex-col gap-5">
@@ -123,44 +123,11 @@ export function SettingsView() {
           </section>
 
           <section className="rounded-xl border border-hairline bg-surface p-5 md:p-6">
-            <h2 className="mb-3 text-base font-semibold">Anthropic — 카드 자동 생성</h2>
-            <Callout tone="warn" className="mb-4">
-              이 브라우저 탭에서 API를 직접 호출합니다 (BYOK, 프록시 없음). 이 사이트는 공개되어 있으므로 XSS 등으로
-              키가 노출될 이론적 위험이 있습니다 — 개인용으로만 사용하세요.
-            </Callout>
-            <div className="flex flex-col gap-3">
-              <label className="flex flex-col gap-1.5">
-                <span className={labelCls}>Anthropic API 키</span>
-                <input
-                  type="password"
-                  className={inputCls}
-                  value={settings.anthropicApiKey}
-                  onChange={(e) => update('anthropicApiKey', e.target.value)}
-                  placeholder="sk-ant-…"
-                />
-              </label>
-              <label className="flex flex-col gap-1.5">
-                <span className={labelCls}>모델</span>
-                <select
-                  className={inputCls}
-                  value={settings.anthropicModel}
-                  onChange={(e) => update('anthropicModel', e.target.value)}
-                >
-                  <option value="claude-opus-5">claude-opus-5</option>
-                  <option value="claude-sonnet-5">claude-sonnet-5</option>
-                  <option value="claude-haiku-4-5">claude-haiku-4-5</option>
-                </select>
-              </label>
-              <button
-                className="mt-1 w-fit text-xs text-text-dim underline hover:text-text"
-                onClick={() => {
-                  clearAnthropicKey()
-                  update('anthropicApiKey', '')
-                }}
-              >
-                키 삭제
-              </button>
-            </div>
+            <h2 className="mb-2 text-base font-semibold">카드 만들기</h2>
+            <p className="text-xs leading-relaxed text-text-dim">
+              카드는 외부 LLM(ChatGPT·Claude 등)에서 CSV로 만들어 “가져오기” 탭에서 업로드합니다. 이 앱은 더 이상
+              API 키를 저장하지 않습니다.
+            </p>
           </section>
         </div>
       </div>

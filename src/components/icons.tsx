@@ -24,10 +24,11 @@ export function DecksIcon({ className }: Props) {
   )
 }
 
-export function GenerateIcon({ className }: Props) {
+export function ImportIcon({ className }: Props) {
   return (
     <svg {...base} className={className}>
-      <path d="M12 4l1.6 4.4L18 10l-4.4 1.6L12 16l-1.6-4.4L6 10l4.4-1.6L12 4z" />
+      <path d="M12 3v12M8 11l4 4 4-4" />
+      <path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
     </svg>
   )
 }

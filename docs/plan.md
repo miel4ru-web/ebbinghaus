@@ -8,7 +8,9 @@
 
 주의해서 다룰 사실 하나: 한국에서 "에빙하우스 복습 주기"로 유통되는 **10분–1일–1주–1개월** 표는 에빙하우스 1885년 원논문에 없다. 원논문에 있는 것은 망각률 곡선(20분 42%, 1일 66%, 6일 75% 망각)과 재학습 절약률뿐이고, 주기 표는 후대(토니 부잔 유래로 추정)에 붙었다. 따라서 이 시스템은 그 사다리를 **경전이 아니라 조정 가능한 기본 프리셋**으로 다루고, 실제 응답 기록으로 보정한다.
 
-목표: 폰과 PC 어디서든 열어서 오늘 볼 카드를 밀어내고, 카드 자체는 LLM·문서·오답에서 자동으로 불어나는 1인용 암기 시스템.
+목표: 폰과 PC 어디서든 열어서 오늘 볼 카드를 밀어내고, 카드 자체는 외부 LLM이 만든 CSV를 가져와 채우는 1인용 암기 시스템.
+
+> **2026-09 개정**: 앱 내 BYOK LLM 생성(브라우저에서 Anthropic API 직호출)을 제거하고, 외부 LLM이 만든 **CSV 업로드**로 대체했다. 이유 — 공개 사이트 `localStorage`에 API 키를 두는 위험을 없애고, 어떤 LLM(ChatGPT·Gemini 등)이든 쓸 수 있게 하며, 앱의 네트워크 표면을 GitHub API 하나로 줄이기 위함.
 
 ## 확정 사양
 
@@ -17,7 +19,7 @@
 | 도메인 | 범용 (어휘·시험지식·업무지식 혼용) |
 | 배포 | GitHub Pages 정적 사이트, 모바일/PC 겸용 PWA |
 | 데이터 저장 | GitHub 저장소를 DB로 (JSON 커밋) |
-| LLM | 브라우저에서 사용자 Anthropic 키로 직호출 (BYOK) |
+| 카드 입력 | 외부 LLM이 만든 CSV를 업로드/붙여넣기 (앱은 LLM을 호출하지 않음) |
 | 스케줄러 | 에빙하우스 고정 사다리 + 카드별 적응형 보정 |
 | 채점 | 2버튼 자가채점 (모름 / 알음) |
 | 사용자 | 1인 (계정·권한 설계 없음) |
@@ -108,34 +110,34 @@ fuzz = 1 ± 0.08, seed = hash(cardId + reps)   ← 결정론적. 재생 가능�
 
 알림은 하루 1회, 지정 시각에만. "847장 밀렸습니다"가 아니라 "오늘 15분이면 됩니다"로 프레이밍한다.
 
-## LLM 카드 생성 (BYOK)
+## 카드 입력 — CSV 가져오기
 
-`@anthropic-ai/sdk`를 `dangerouslyAllowBrowser: true`로 초기화한다. SDK가 `anthropic-dangerous-direct-browser-access: true` 헤더를 붙이고, Anthropic API가 이 헤더에 대해 CORS를 허용하므로 프록시 서버가 필요 없다. 모델은 `claude-opus-5` 기본(설정에서 변경 가능), `thinking: {type:"adaptive"}`, 긴 생성은 `.stream()` + `.getFinalMessage()`.
+앱은 LLM을 호출하지 않는다. 사용자가 원하는 LLM에서 아래 형식의 CSV를 받아 "가져오기" 탭에 붙여넣거나 파일로 올린다.
 
-노트 배열은 `output_config.format` 구조화 출력으로 받는다.
+**형식** — 헤더 행 `type,front,back,tags` (열 순서 무관, 대소문자 무시, 별칭 허용):
 
-세 가지 입구:
+- `type` — `basic`(앞→뒤) · `reverse`(양방향, 카드 2장) · `cloze`(빈칸). 생략 시 `{{c1::}}` 유무로 자동 판별.
+- `front` / `back` — basic·reverse의 질문/정답. cloze는 `front`에 `{{c1::답}}` 표기, `back`은 비움.
+- `tags` — 공백 구분(선택).
+- 헤더 없이 2열이면 `front,back`(basic)로 읽는다. 구분자는 `,` `\t` `;` 자동 인식. RFC 4180 따옴표 처리.
 
-1. **주제/원문 → 카드** — 붙여넣은 텍스트나 주제어에서 노트 생성.
-2. **문서 임포트** — .md / .txt / .csv 붙여넣기 또는 파일 선택. (PDF는 document 블록으로 가능하나 v2로 미룸)
-3. **오답 파생** — leech 카드나 "모름" 3연속 카드를 LLM이 더 작은 단위로 쪼개 재작성 제안.
+**파이프라인** — `src/lib/csv.ts`가 파싱 + 행별 검증 → 미리보기(유형별 카운트, 건너뛴 행 사유) → 새 덱 생성 또는 기존 덱에 추가. 노트 저장 시 `src/scheduler/cards.ts`의 `seedCardsForNote`로 카드를 즉시 만들어 동기화 없이도 복습 가능. (동일 seed·id라 이후 로그 재생과 충돌 없음.)
 
-**생성물은 항상 검수 화면을 거쳐 저장한다.** 생성 프롬프트에 Wozniak의 최소 정보 원칙을 넣는다 — 한 카드에 한 사실, 목록/열거 금지, 이해 없는 암기 금지, 맥락 포함. 카드 품질이 나쁘면 망각률이 오르고 → 리뷰 빈도가 오르고 → 부채가 커지는 악순환이 된다.
-
-생성 화면에 누적 토큰/예상 비용을 표시한다.
+프롬프트에 Wozniak 최소 정보 원칙을 넣도록 "가져오기" 화면에 복사용 프롬프트를 제공한다 — 한 카드에 한 사실, 목록/열거 금지, 맥락 포함. 카드 품질이 나쁘면 망각률↑ → 리뷰 빈도↑ → 부채↑ 악순환.
 
 ## 보안 — 정직하게 짚어둘 것
 
-공개 GitHub Pages 사이트의 `localStorage`에 **GitHub PAT와 Anthropic API 키**가 들어간다. XSS 한 방이면 둘 다 털린다. 1인용이므로 수용 가능한 트레이드오프지만, 완화책은 넣는다:
+공개 GitHub Pages 사이트의 `localStorage`에 **GitHub PAT**가 들어간다. XSS 한 방이면 털린다. 1인용이므로 수용 가능한 트레이드오프지만, 완화책은 넣는다:
 
 - PAT는 fine-grained, `ebbinghaus-data` **단일 저장소**에만 `contents: write`. 다른 어떤 권한도 주지 않는다.
-- 엄격한 CSP. 서드파티 스크립트/CDN 0개, 전부 번들.
-- **카드 본문 렌더링에 DOMPurify 필수.** 카드 내용은 LLM과 임포트 문서에서 오고, 그걸 HTML로 그리므로 이게 실질적인 XSS 표면이다.
-- 키 입력 UI에 위험을 명시하고, 키 삭제 버튼을 제공.
+- 엄격한 CSP. 서드파티 스크립트/CDN 0개, 전부 번들. `connect-src`는 `api.github.com` 하나.
+- **카드 본문 렌더링에 DOMPurify 필수.** 카드 내용은 가져온 CSV에서 오고, 그걸 HTML로 그리므로 이게 실질적인 XSS 표면이다.
+- PAT 입력 UI에 위험을 명시하고, 토큰 삭제 버튼을 제공.
+- LLM API 키는 앱에 저장하지 않는다(생성은 앱 밖에서).
 
 ## 기술 스택
 
-Vite + React + TypeScript + Tailwind, `vite-plugin-pwa`(오프라인 캐시), `idb`(IndexedDB), `@anthropic-ai/sdk`, `dompurify`, `vitest`. GitHub Actions로 Pages 배포.
+Vite + React + TypeScript + Tailwind, `vite-plugin-pwa`(오프라인 캐시), `idb`(IndexedDB), `dompurify`, `vitest`. CSV 파서는 무의존 자체 구현(`src/lib/csv.ts`). GitHub Actions로 Pages 배포.
 
 ## 구현 순서
 

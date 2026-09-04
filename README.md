@@ -16,7 +16,7 @@
 - **동기화**는 노트/덱은 단순 업서트, 카드/복습기록은 로그 재생(replay) 방식이다. 스케줄러가 순수 함수이기
   때문에 두 기기의 리뷰 로그를 병합해 처음부터 재생하면 항상 같은 결과가 나온다.
 - **데이터는 별도 비공개 저장소**(`ebbinghaus-data`)에 있다. 이 앱 저장소는 공개지만 학습 내용은 아니다.
-- **LLM 카드 생성은 BYOK**다. 브라우저에서 사용자의 Anthropic API 키로 직접 호출한다(프록시 서버 없음).
+- **카드는 외부 LLM이 만든 CSV로 가져온다.** 앱은 LLM을 호출하지 않는다 — ChatGPT·Claude 등에서 `type,front,back,tags` 형식 CSV를 받아 "가져오기" 탭에서 업로드하면 덱이 된다. (앱에 API 키를 저장하지 않는다.)
 
 ## 로컬 개발
 
@@ -29,10 +29,18 @@ npm run build
 
 ## 설정
 
-앱의 "설정" 탭에서:
-1. GitHub — `ebbinghaus-data` 저장소 하나에만 `contents: write` 권한을 준 fine-grained PAT
-2. Anthropic — 카드 자동 생성용 API 키 (선택)
+앱의 "설정" 탭에서 GitHub — `ebbinghaus-data` 저장소 하나에만 `contents: write` 권한을 준 fine-grained PAT를 넣는다. 카드 가져오기에는 별도 설정이 필요 없다.
+
+## 카드 CSV 형식
+
+헤더 행 `type,front,back,tags` (열 순서 무관):
+
+- `type` — `basic` · `reverse` · `cloze` (생략하면 `{{c1::}}` 유무로 자동 판별)
+- `front` / `back` — 질문 / 정답. cloze는 `front`에 `{{c1::답}}` 표기, `back`은 비움
+- `tags` — 공백 구분 (선택)
+
+헤더 없이 2열이면 `front,back`(basic)으로 읽는다. 구분자는 `,` · 탭 · `;` 자동 인식. "가져오기" 탭에 LLM용 프롬프트가 들어 있다.
 
 ## 기술 스택
 
-Vite · React 19 · TypeScript · Tailwind v4 · IndexedDB(`idb`) · `@anthropic-ai/sdk` · DOMPurify · Vitest
+Vite · React 19 · TypeScript · Tailwind v4 · IndexedDB(`idb`) · DOMPurify · Vitest

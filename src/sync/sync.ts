@@ -17,6 +17,7 @@ import {
   putReviewLog,
   putCards,
 } from '../db'
+import { cardId, cardOrdsForNote } from '../scheduler/cards'
 import { createCard } from '../scheduler/ebbinghaus'
 import { replay, dedupeLogs } from '../scheduler/replay'
 import type { Card, Deck, Note, ReviewLog } from '../types'
@@ -31,15 +32,6 @@ export interface SyncResult {
 
 function monthKey(iso: string): string {
   return iso.slice(0, 7) // YYYY-MM
-}
-
-/** Which card ords a note produces. Kept here (not on Note) since it's a scheduling concern. */
-function cardOrdsForNote(note: Note): number[] {
-  return note.type === 'reverse' ? [0, 1] : [0]
-}
-
-export function cardId(noteId: string, ord: number): string {
-  return `${noteId}:${ord}`
 }
 
 export async function syncNow(): Promise<SyncResult> {

@@ -8,12 +8,12 @@
     <meta name="theme-color" content="#4f46e5" />
     <!--
       Strict CSP (plan §보안): no third-party scripts/CDNs, everything bundled.
-      connect-src allows only the two APIs this app talks to directly from the browser
-      (GitHub Contents API for data sync, Anthropic API for BYOK card generation).
+      connect-src allows only the GitHub Contents API (data sync); card content is
+      imported from CSV files chosen locally, so no other network origin is needed.
     -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.github.com https://api.anthropic.com; manifest-src 'self'; worker-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.github.com; manifest-src 'self'; worker-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
     />
     <meta name="description" content="에빙하우스 망각곡선 기반 개인용 간격 반복 암기 시스템" />
     <title>Ebbinghaus</title>

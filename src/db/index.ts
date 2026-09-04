@@ -61,13 +61,6 @@ export async function getAllNotes(): Promise<Note[]> {
   return db.getAll('notes')
 }
 
-/** Notes whose backing card was auto-suspended as a leech (plan §리뷰 부채 방어). */
-export async function getLeechNotes(): Promise<Note[]> {
-  const db = await getDB()
-  const all = await db.getAll('notes')
-  return all.filter((n) => n.tags.includes('leech'))
-}
-
 // --- Cards ---
 export async function putCard(card: Card): Promise<void> {
   const db = await getDB()

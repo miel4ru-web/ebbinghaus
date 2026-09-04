@@ -2,17 +2,17 @@ import type { ComponentType } from 'react'
 import {
   BrandGlyph,
   DecksIcon,
-  GenerateIcon,
+  ImportIcon,
   SettingsIcon,
   StatsIcon,
   SyncIcon,
 } from '../../components/icons'
 
-export type Tab = 'decks' | 'generate' | 'stats' | 'settings'
+export type Tab = 'decks' | 'import' | 'stats' | 'settings'
 
 const TABS: { id: Tab; label: string; Icon: ComponentType<{ className?: string }> }[] = [
   { id: 'decks', label: '덱', Icon: DecksIcon },
-  { id: 'generate', label: '생성', Icon: GenerateIcon },
+  { id: 'import', label: '가져오기', Icon: ImportIcon },
   { id: 'stats', label: '통계', Icon: StatsIcon },
   { id: 'settings', label: '설정', Icon: SettingsIcon },
 ]

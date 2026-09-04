@@ -172,8 +172,8 @@ export function ReviewSession({ deckId, newCardsPerDay, onExit }: Props) {
 
       {leechNotice && (
         <p className="rounded-lg border border-again/30 bg-again/10 px-3.5 py-2.5 text-xs leading-relaxed text-again">
-          이 카드는 {LEECH_THRESHOLD}번 반복해서 틀려 자동으로 정지되었습니다. 카드를 더 작은 단위로 다시
-          만들어보세요 — 생성 화면의 “오답에서 불러오기”를 쓰면 편합니다.
+          이 카드는 {LEECH_THRESHOLD}번 반복해서 틀려 자동으로 정지되었습니다. “편집”으로 카드를 더 작은
+          단위로 쪼개거나 맥락을 보강해 다시 만들어보세요.
         </p>
       )}
 
