@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Deck, Note } from '../../types'
-import { getDecks, putNote } from '../../db'
+import { getDecks, getLeechNotes, putNote } from '../../db'
 import { newId } from '../../lib/id'
 import { loadSettings } from '../../lib/storage'
 import { estimateCostUsd, generateNotes, toNoteFields, type GeneratedNote } from '../../llm/generate'
+
+const LEECH_REWRITE_INSTRUCTIONS =
+  '아래는 반복해서 틀린(leech) 카드들입니다. 각 카드를 더 작은 단위로 쪼개거나 맥락을 보강해서, ' +
+  '더 쉽게 기억할 수 있는 카드로 다시 작성하세요. 원래 카드를 그대로 베끼지 말고 개선하세요.'
 
 export function GenerateView() {
   const [decks, setDecks] = useState<Deck[]>([])
@@ -15,6 +19,7 @@ export function GenerateView() {
   const [error, setError] = useState<string | null>(null)
   const [drafts, setDrafts] = useState<GeneratedNote[]>([])
   const [totalCostUsd, setTotalCostUsd] = useState(0)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     getDecks().then((d) => {
@@ -60,6 +65,28 @@ export function GenerateView() {
     setDrafts((prev) => prev.filter((_, idx) => idx !== i))
   }
 
+  async function handleFilePick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const text = await file.text()
+    setSource((prev) => (prev ? `${prev}\n\n${text}` : text))
+    e.target.value = ''
+  }
+
+  async function fillFromLeeches() {
+    const leeches = await getLeechNotes()
+    if (leeches.length === 0) {
+      setError('leech로 표시된(반복해서 틀린) 카드가 없습니다.')
+      return
+    }
+    const text = leeches
+      .map((n) => Object.entries(n.fields).map(([k, v]) => `${k}: ${v}`).join(' / '))
+      .join('\n')
+    setSource(text)
+    setInstructions(LEECH_REWRITE_INSTRUCTIONS)
+    setError(null)
+  }
+
   async function saveAll() {
     if (!deckId) {
       setError('저장할 덱을 먼저 선택하세요.')
@@ -92,6 +119,20 @@ export function GenerateView() {
           </option>
         ))}
       </select>
+
+      <div className="flex gap-2 text-xs">
+        <button
+          type="button"
+          className="rounded border border-border px-2 py-1 text-text-dim"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          파일에서 불러오기 (.md/.txt/.csv)
+        </button>
+        <button type="button" className="rounded border border-border px-2 py-1 text-text-dim" onClick={fillFromLeeches}>
+          오답에서 불러오기
+        </button>
+        <input ref={fileInputRef} type="file" accept=".md,.txt,.csv,text/plain,text/markdown,text/csv" className="hidden" onChange={handleFilePick} />
+      </div>
 
       <textarea
         className="min-h-[140px] rounded border border-border bg-surface-2 px-3 py-2"

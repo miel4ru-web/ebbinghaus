@@ -15,6 +15,18 @@ export const FUZZ_SPAN = 0.08
 /** How many ladder rungs a lapse ("모름") drops a card. */
 export const LAPSE_STEP_PENALTY = 2
 
+/**
+ * Lapse count at which a card is auto-flagged as a "leech" and suspended (plan §리뷰
+ * 부채 방어: "개인용 앱에서 가장 가성비 높은 품질 장치"). A card failing this often is
+ * usually a card-quality problem, not a memory problem — surfacing it beats letting it
+ * eat review budget forever.
+ */
+export const LEECH_THRESHOLD = 8
+
+export function isLeech(card: Card): boolean {
+  return card.lapses >= LEECH_THRESHOLD
+}
+
 const MAX_STEP = LADDER_MINUTES.length - 1
 
 export interface SchedulerResult {
