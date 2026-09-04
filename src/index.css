@@ -1,27 +1,93 @@
 @import "tailwindcss";
 
+/* Design tokens.
+   Dark is the default (emitted on :root by @theme). The light theme re-defines
+   the same custom properties that Tailwind's generated color utilities read, so
+   every themed utility flips with no per-component work.
+   "system" = no data-theme attribute (follows the OS); the Settings toggle sets
+   data-theme light or dark to override. */
 @theme {
-  --color-bg: #0b0f19;
-  --color-surface: #131a2b;
-  --color-surface-2: #1b2438;
-  --color-border: #2a3450;
-  --color-brand: #4f46e5;
-  --color-brand-light: #818cf8;
-  --color-text: #e6e9f2;
-  --color-text-dim: #8b93ab;
-  --color-good: #22c55e;
-  --color-again: #ef4444;
+  --color-bg: #1a1712;
+  --color-surface: #221e18;
+  --color-surface-2: #2a251e;
+  --color-hairline: #322c23;
+  --color-border: #443c30;
+  --color-text: #f2ede3;
+  --color-text-dim: #a69b87;
+  --color-brand: #818cf8;
+  --color-brand-light: #9aa3fa;
+  --color-brand-quiet: #2b2a44;
+  --color-on-brand: #17152e;
+  --color-good: #5fb87f;
+  --color-again: #e8705b;
+
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
-html,
-body,
-#root {
-  height: 100%;
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --color-bg: #f7f3ec;
+    --color-surface: #ffffff;
+    --color-surface-2: #f4efe6;
+    --color-hairline: #ece5d8;
+    --color-border: #d9cfbd;
+    --color-text: #2a2318;
+    --color-text-dim: #7a6f5c;
+    --color-brand: #5a50d6;
+    --color-brand-light: #4840c0;
+    --color-brand-quiet: #ecebfb;
+    --color-on-brand: #ffffff;
+    --color-good: #2f8f55;
+    --color-again: #c6503b;
+  }
 }
 
-body {
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  -webkit-tap-highlight-color: transparent;
-  overscroll-behavior-y: none;
+:root[data-theme="light"] {
+  --color-bg: #f7f3ec;
+  --color-surface: #ffffff;
+  --color-surface-2: #f4efe6;
+  --color-hairline: #ece5d8;
+  --color-border: #d9cfbd;
+  --color-text: #2a2318;
+  --color-text-dim: #7a6f5c;
+  --color-brand: #5a50d6;
+  --color-brand-light: #4840c0;
+  --color-brand-quiet: #ecebfb;
+  --color-good: #2f8f55;
+  --color-again: #c6503b;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+      "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    letter-spacing: -0.02em;
+  }
+
+  /* Numeric readouts (counts, intervals, costs, ease) align in columns. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 }

@@ -4,6 +4,8 @@ import { buildQueue } from './queue'
 import { ebbinghausScheduler, previewInterval, LEECH_THRESHOLD } from '../../scheduler/ebbinghaus'
 import { getNote, putCard, putNote, putReviewLog } from '../../db'
 import { renderClozeField, renderField } from '../../lib/renderCard'
+import { btnAccent, btnDefault, btnGhost } from '../../components/ui'
+import { BackIcon, CheckIcon, EditIcon } from '../../components/icons'
 
 interface Props {
   deckId: string
@@ -111,19 +113,27 @@ export function ReviewSession({ deckId, newCardsPerDay, onExit }: Props) {
   })
 
   if (queue === null) {
-    return <div className="p-6 text-text-dim">불러오는 중…</div>
+    return <div className="grid min-h-screen place-items-center text-text-dim">불러오는 중…</div>
   }
 
   if (!card) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
-        <p className="text-lg">오늘 복습을 모두 마쳤습니다 🎉</p>
-        <p className="text-text-dim">
-          알음 {tally.known} · 모름 {tally.forgot}
-        </p>
-        <button className="rounded-lg bg-brand px-4 py-2" onClick={onExit}>
-          덱 목록으로
-        </button>
+      <div className="grid min-h-screen place-items-center p-8">
+        <div className="text-center">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-good/40 bg-good/10 text-good">
+            <CheckIcon className="text-xl" />
+          </div>
+          <h1 className="text-2xl font-semibold md:text-[1.7rem]">오늘 복습을 모두 마쳤습니다</h1>
+          <div className="mx-auto my-6 inline-flex gap-7 rounded-xl border border-hairline bg-surface px-6 py-3.5">
+            <Tally n={tally.known} label="알음" cls="text-good" />
+            <Tally n={tally.forgot} label="모름" cls="text-again" />
+          </div>
+          <div>
+            <button className={btnAccent} onClick={onExit}>
+              덱 목록으로
+            </button>
+          </div>
+        </div>
       </div>
     )
   }
@@ -135,41 +145,55 @@ export function ReviewSession({ deckId, newCardsPerDay, onExit }: Props) {
   const knowLabel = previewInterval(card, 1, now)
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-lg flex-col gap-4 p-4">
-      <div className="flex items-center justify-between text-sm text-text-dim">
-        <button onClick={onExit}>← 나가기</button>
-        <div className="flex items-center gap-3">
-          <span>
-            {index + 1} / {queue.length}
-          </span>
-          <button onClick={startEdit}>편집</button>
+    <div className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-4 px-4 py-6 md:py-10">
+      <div className="flex items-center gap-4">
+        <button
+          onClick={onExit}
+          className="flex items-center gap-1 text-sm text-text-dim hover:text-text"
+        >
+          <BackIcon className="text-[14px]" /> 나가기
+        </button>
+        <div className="h-1 flex-1 overflow-hidden rounded-full bg-hairline">
+          <div
+            className="h-full rounded-full bg-brand transition-[width]"
+            style={{ width: `${(index / queue.length) * 100}%` }}
+          />
         </div>
+        <span className="tnum text-xs text-text-dim">
+          {index + 1} / {queue.length}
+        </span>
+        <button
+          onClick={startEdit}
+          className="flex items-center gap-1 text-sm text-text-dim hover:text-text"
+        >
+          <EditIcon className="text-[14px]" /> 편집
+        </button>
       </div>
 
       {leechNotice && (
-        <p className="rounded bg-again/15 px-3 py-2 text-xs text-again">
+        <p className="rounded-lg border border-again/30 bg-again/10 px-3.5 py-2.5 text-xs leading-relaxed text-again">
           이 카드는 {LEECH_THRESHOLD}번 반복해서 틀려 자동으로 정지되었습니다. 카드를 더 작은 단위로 다시
-          만들어보세요 — 생성 화면의 "오답에서 불러오기"를 쓰면 편합니다.
+          만들어보세요 — 생성 화면의 “오답에서 불러오기”를 쓰면 편합니다.
         </p>
       )}
 
       {editing && note ? (
-        <div className="flex flex-1 flex-col gap-3 rounded-xl border border-border bg-surface p-4">
+        <div className="flex flex-1 flex-col gap-3 rounded-2xl border border-border bg-surface p-5">
           {Object.entries(draftFields).map(([key, value]) => (
-            <label key={key} className="flex flex-col gap-1 text-sm">
-              <span className="text-text-dim">{key}</span>
+            <label key={key} className="flex flex-col gap-1.5 text-sm">
+              <span className="text-xs text-text-dim">{key}</span>
               <textarea
-                className="min-h-[80px] rounded border border-border bg-surface-2 px-3 py-2"
+                className="min-h-[88px] rounded-lg border border-border bg-bg px-3 py-2 leading-relaxed text-text"
                 value={value}
                 onChange={(e) => setDraftFields((f) => ({ ...f, [key]: e.target.value }))}
               />
             </label>
           ))}
-          <div className="flex gap-2">
-            <button className="rounded bg-brand px-3 py-1.5" onClick={saveEdit}>
+          <div className="flex gap-2.5">
+            <button className={btnAccent} onClick={saveEdit}>
               저장
             </button>
-            <button className="rounded bg-surface-2 px-3 py-1.5" onClick={() => setEditing(false)}>
+            <button className={btnGhost} onClick={() => setEditing(false)}>
               취소
             </button>
           </div>
@@ -178,34 +202,58 @@ export function ReviewSession({ deckId, newCardsPerDay, onExit }: Props) {
         <>
           <button
             type="button"
-            className="min-h-[220px] flex-1 rounded-xl border border-border bg-surface p-6 text-left text-lg"
+            className="min-h-[220px] flex-1 rounded-2xl border border-hairline bg-surface p-6 text-left text-lg leading-relaxed md:p-8 md:text-xl"
             onClick={() => setRevealed((r) => !r)}
           >
             <div dangerouslySetInnerHTML={{ __html: front }} />
             {revealed && back && (
               <>
-                <hr className="my-4 border-border" />
+                <hr className="my-5 border-hairline" />
                 <div dangerouslySetInnerHTML={{ __html: back }} />
               </>
             )}
           </button>
 
           {!revealed ? (
-            <button className="rounded-lg bg-surface-2 py-3" onClick={() => setRevealed(true)}>
-              답 보기 (space)
+            <button className={`${btnDefault} w-full py-3.5`} onClick={() => setRevealed(true)}>
+              답 보기&nbsp;<span className="tnum text-text-dim">(Space)</span>
             </button>
           ) : (
             <div className="grid grid-cols-2 gap-3">
-              <button className="rounded-lg border border-again bg-again/15 py-3" onClick={() => grade(0)}>
-                모름 (1) · {forgotLabel}
+              <button
+                className="flex flex-col items-center gap-1 rounded-xl border border-again/40 bg-again/10 py-3.5 text-sm font-semibold text-again"
+                onClick={() => grade(0)}
+              >
+                모름 (1)
+                <span className="tnum text-xs font-normal opacity-90">다시 {forgotLabel} 뒤</span>
               </button>
-              <button className="rounded-lg border border-good bg-good/15 py-3" onClick={() => grade(1)}>
-                알음 (2) · {knowLabel}
+              <button
+                className="flex flex-col items-center gap-1 rounded-xl border border-good/40 bg-good/10 py-3.5 text-sm font-semibold text-good"
+                onClick={() => grade(1)}
+              >
+                알음 (2)
+                <span className="tnum text-xs font-normal opacity-90">다음 {knowLabel} 뒤</span>
               </button>
             </div>
           )}
+
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] text-text-dim">
+            <span>Space 답 보기</span>
+            <span>1 모름</span>
+            <span>2 알음</span>
+            <span>세션 상한 {SESSION_LIMIT}장</span>
+          </div>
         </>
       )}
+    </div>
+  )
+}
+
+function Tally({ n, label, cls }: { n: number; label: string; cls: string }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className={`tnum text-2xl font-semibold ${cls}`}>{n}</span>
+      <span className="text-[11px] text-text-dim">{label}</span>
     </div>
   )
 }
