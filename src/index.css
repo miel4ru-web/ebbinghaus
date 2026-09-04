@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0b0f19;
+  --color-surface: #131a2b;
+  --color-surface-2: #1b2438;
+  --color-border: #2a3450;
+  --color-brand: #4f46e5;
+  --color-brand-light: #818cf8;
+  --color-text: #e6e9f2;
+  --color-text-dim: #8b93ab;
+  --color-good: #22c55e;
+  --color-again: #ef4444;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
